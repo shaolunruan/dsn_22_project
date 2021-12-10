@@ -1,34 +1,33 @@
 body{
-    background-color: #f0f0f0;
+    background-color: rgba(242, 242, 242, 0.42);
 }
 .overview-container{
-    width: 1200px;
-    height:   80px;
-    margin-top: 50px;
-    margin-left: 20px;
-    margin-bottom: 0;
-    border-radius: 10px;
-    background-color: #ffffff;
+    position: absolute;
+    width: 900px;
+    height: 80px;
+    margin: 15px;
+    border-radius: 5px;
+    background-color: #fff;
+    top: 50px;
     /* display: none; */
 }
 
 .svg-container{
     position: absolute;
-    width: 585px;
-    height: 600px;
-    margin: 20px;
-    border-radius: 10px;
-    background-color: #ffffff;
-    top: 80px;
+    width: 900px;
+    height: 500px;
+    margin: 15px;
+    border-radius: 5px;
+    background-color: #fff;
+    top: 150px;
 }
 
-.container-1{
-    left: 0;
-}
-
-.container-2{
+.btns{
+    position: absolute;
+    top: 0;
     right: 0;
 }
+
 
 .loop_node{
     stroke: #1d2024;
@@ -63,12 +62,12 @@ svg{
     /* fill: #d4dbff; */
   }
 
-  .nodes .circle_local {
-    pointer-events: all;
-    stroke: none;
-    stroke-width: 40px;
-    /* fill: #d4dbff; */
+  #marker{
+      stroke: #74776e;
+      fill: none;
+      stroke-width: 1.5px;
   }
+
 
   .nodes .circle {
     pointer-events: all;
@@ -93,18 +92,25 @@ svg{
     z-index:999;
 }
 
+.link_text{
+    font-size: 0.6em;
+    z-index:999;
+    font-weight: bold;
+}
+
 .nodes text{
     font-size: 1em;
     fill: #1d2024;
-    z-index: 999;
+    z-index: 888;
     font-family: Arial, Helvetica, sans-serif;
   }
 
   .nodes .text_local{
-    font-size: 0.5em;
-    fill: #1d2024;
-    z-index: 999;
+    font-size: 0.6em;
+    fill: #3d3f3a;
+    z-index: 777;
     font-family: Arial, Helvetica, sans-serif;
+
   }
 
   .overview .inner{
@@ -117,7 +123,7 @@ svg{
   }
 
   .overview line{
-      stroke-width: 2px;
+      stroke-linecap: round;
   }
 
   .inner:hover{
@@ -134,16 +140,10 @@ svg{
     position: absolute;
     left: 20px;
     top: 20px;
-    z-index: 999;
+    z-index: 666;
   }
 
-  .links text{
-    font-size:0.7em
-  }
 
-  button{
-    margin: 20px;
-  }
   
   #item-coat{
     width: 300px;
