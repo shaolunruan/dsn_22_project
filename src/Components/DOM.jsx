@@ -5,7 +5,8 @@ import "guans-style";
 import axios from 'axios';
 import * as dat from 'dat.gui';
 import {select} from 'd3-selection'
-import "../style.css";
+import "../style.css"
+import DataGrid from 'react-data-grid';
 
 
 
@@ -18,7 +19,10 @@ class DOM extends Component {
             clusterByKey: [],
             force:-10, /*You can change the layout here (e.g. -XX)*/
 
-            model:"trident"
+            model:"trident",
+            valueByKey: {},
+            threshold:1.01,
+            function_name:'cluster_1'
 
         };
 
@@ -27,6 +31,9 @@ class DOM extends Component {
         this.drawOvVw1 = this.drawOvVw1.bind(this);
         this.drawRv1 = this.drawRv1.bind(this);
         this.click_model_button = this.click_model_button.bind(this);
+        this.initTxt_parseDiff_y_branch = this.initTxt_parseDiff_y_branch.bind(this);
+        this.initJson_parseLayout_y_branch = this.initJson_parseLayout_y_branch.bind(this);
+        this.initGUI = this.initGUI.bind(this);
 
 
 
@@ -169,7 +176,9 @@ class DOM extends Component {
 
                 this.setState({
                     clusterByKey: clusterByKey
-                }, this.drawOvVw1)
+                }, ()=>{
+                    this.drawOvVw1()
+                })
 
                 // console.log(this.state.clusterByKey)
 
@@ -241,6 +250,9 @@ class DOM extends Component {
             .attr('fill', d=>scale_color(d[1].nodes.length))
             .on('click', function (_,d) {
                 _this.drawRv1(d[0])
+                _this.setState({
+                    function_name:d[0]
+                })
             })
             .on('mouseover', function () {
                 d3.select(this)
@@ -267,6 +279,7 @@ class DOM extends Component {
     }
 
     drawRv1(cluster_id='cluster_1'){
+        console.log(this.state.threshold)
         let clusterByKey = this.state.clusterByKey
 
         const width = 900,
@@ -339,7 +352,13 @@ class DOM extends Component {
         /* 开始画点和线 */
         link = link_g
             .append("line")
-            .style('stroke', '#c5c5c5')
+            .style('stroke', d=>{
+                if(_this.state.model=='trident'&&_this.state.threshold<=d.goldenValue){
+                    return '#cd7080'
+                }else{
+                    return '#c5c5c5'
+                }
+            })
             .style('stroke-width', 2)
 
 
@@ -363,9 +382,18 @@ class DOM extends Component {
             .attr('class', 'circle_local')
             .attr("r", 6)
             .attr('fill', function (d) {
-                return d.position == 'head' ? 'rgb(250,195,198)' :
-                    (d.position == 'tail' ? '#cedafc' :
-                        '#c5c5c5')
+                if(_this.state.model=='Y_branch'){
+                    if(_this.state.valueByKey[d.id]==0){
+                        return '#bce9bd'
+                    }else if(_this.state.valueByKey[d.id]==1){
+                        return '#e6b0b4'
+                    }
+                }else{
+                    return d.position == 'head' ? 'rgb(250,195,198)' :
+                        (d.position == 'tail' ? '#cedafc' :
+                            '#c5c5c5')
+                }
+
             })
             .attr("stroke", '#9c9c9c')
             .attr("stroke-width", 1)
@@ -403,7 +431,11 @@ class DOM extends Component {
             .append('text')
             .attr('class', 'link_text')
             .text(function (d) {
-                return d.goldenValue
+                if(_this.state.model=='Y_branch'){
+                    return
+                }else{
+                    return d.goldenValue
+                }
             })
             .attr('dy', '-3px')
             .style('fill',d=>{
@@ -495,25 +527,109 @@ class DOM extends Component {
                     _this.initTxt_parseDiff_1(_this.state.model)
                     _this.initJson_parseLayout_1()
                 }else{
-                    console.log(123)/***********************************/
+                    _this.initTxt_parseDiff_y_branch()
+
                 }
             })
         }
     }
 
+    initTxt_parseDiff_y_branch(){
+        let linkKey, valueByKey = {}, _this = this
+
+        axios.get('data/Y_branch.txt')
+            .then(txt=>{
+                txt = txt.data
+
+                let links = txt.split(/[\n]+/).map((d, i) => {
+                    let tem = d.split(/[\s:?\s]+/);
+                    return {
+                        node: tem[0] || '',
+                        value: tem[1] || '',
+                    };
+                });
+
+                for (let i = 0; i < links.length; i++) {
+                    linkKey = links[i].node
+                    valueByKey[linkKey] = +links[i].value
+                }
+
+                this.setState({
+                    valueByKey: valueByKey
+                },()=>{
+                    _this.initJson_parseLayout_y_branch()
+                })
+
+            })
+    }
+
+    initJson_parseLayout_y_branch(){
+        let clusterByKey = this.state.clusterByKey
+        let valueByKey = this.state.valueByKey
+
+        this.drawRv1()
+
+    }
+
+    initGUI() {
+
+        //定义gui配置项
+        const controls = new function () {
+            this.threshold = 0
+        }
+
+        const gui = new dat.GUI();
+
+        let _this = this
+
+        d3.select('.main').style('position','absolute')
+
+
+        /* 在这里修改thrshold的range */
+        /* 0, 100 */
+        gui.add(controls, 'threshold', 0, 1).name('Weight Threshold').step(0.01).onFinishChange(threshold => {
+
+            this.setState({
+                threshold: threshold
+            },()=>{
+                _this.drawRv1(this.state.function_name)
+            })
+
+        })
+    }
 
     componentDidMount() {
 
         this.initTxt_parseDiff_1()
         this.initJson_parseLayout_1()
+
+        this.initGUI()
     }
 
     render() {
 
         // let itemCardColor = ["#d54062", "#ffa36c", "#ebdc87", "#799351", "#557571", "#d49a89", "#a3d2ca", "#5eaaa8", "#056676", "#d8d3cd"]
 
+        let entry = Object.entries(this.state.clusterByKey)
+
+        const columns = [
+            { key: 'function', name: 'Function' },
+            { key: 'name', name: 'Name' },
+            { key: 'color', name: 'Color' },
+            { key: 'edge_no', name: 'Edge NO.' },
+        ];
+
+        const rows = entry.map(d=>{
+            return {
+                function: d[1].label,
+                name: d[0],
+                color: d[1].color,
+                edge_no: d[1].links.length
+            }
+        })
 
         return (
+
             <div id="root">
 
                 <div className='overview-container'>
@@ -528,6 +644,10 @@ class DOM extends Component {
                         <button type="button" value={'IPAS'} className="btn btn-outline-dark" onClick={this.click_model_button}>IPAS</button>
                         <button type="button" value={'Y_branch'} className="btn btn-outline-dark" onClick={this.click_model_button}>Y-Branch</button>
                     </div>
+                </div>
+
+                <div className="table-container">
+                    <DataGrid columns={columns} rows={rows} className={'table'} />
                 </div>
 
 
