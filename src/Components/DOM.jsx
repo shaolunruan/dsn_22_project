@@ -9,7 +9,6 @@ import "../style.css"
 import DataGrid from 'react-data-grid';
 
 
-
 class DOM extends Component {
 
     constructor(props) {
@@ -249,9 +248,10 @@ class DOM extends Component {
             })
             .attr('fill', d=>scale_color(d[1].nodes.length))
             .on('click', function (_,d) {
-                _this.drawRv1(d[0])
                 _this.setState({
                     function_name:d[0]
+                },()=>{
+                    _this.drawRv1(d[0])
                 })
             })
             .on('mouseover', function () {
@@ -273,13 +273,19 @@ class DOM extends Component {
                 return d[1].label || 'unknown'
             })
 
+        d3.select('#canvas_0')
+            .append('text')
+            .attr("class", 'view_name')
+            .html('Function View')
+            .attr('x', 10)
+            .attr('y', 20)
+
 
         this.drawRv1()
 
     }
 
     drawRv1(cluster_id='cluster_1'){
-        console.log(this.state.threshold)
         let clusterByKey = this.state.clusterByKey
 
         const width = 900,
@@ -303,8 +309,6 @@ class DOM extends Component {
             _this = this
 
 
-
-
         let nodes = [], links = []
 
         nodes = clusterByKey[cluster_id].nodes
@@ -316,10 +320,11 @@ class DOM extends Component {
 
         // this.init_legend(svg)
 
-        // let div = d3.select('body')
-        //     .append('div')
-        //     .attr('id', 'tooltip')
-        //     .style('opacity', 0)
+        let div = d3.select('body')
+            .append('div')
+            .attr('id', 'tooltip')
+            .style('opacity', 0)
+
 
         let simulation = d3
             .forceSimulation()
@@ -397,6 +402,25 @@ class DOM extends Component {
             })
             .attr("stroke", '#9c9c9c')
             .attr("stroke-width", 1)
+            .on('mouseover',(_,d)=>{
+                console.log(d)
+                let gX = d.x, gY = d.y
+
+                d3.select('#tooltip')
+                    .transition()
+                    .delay(150)
+                    .style('opacity', 0.9);
+                d3.select('#tooltip')
+                    .html(`<font>_gvid: </font> ${d._gvid}<hr><font>id: </font>0x${d.id}<hr><font >label:</font> ${d.label}<hr><font>index:</font> ${d.index}`)
+                    .style('left', `${Number(gX) - radius + 20}px`)
+                    .style("top", `${Number(gY) + rectHeightHover + paddingTop * 2 + overviewHieght}px`);
+            })
+            .on('mouseout',()=>{
+                d3.select('#tooltip')
+                    .transition()
+                    .duration(100)
+                    .style('opacity', 0);
+            })
 
         let text = node
             .append('text')
@@ -503,10 +527,20 @@ class DOM extends Component {
             event.subject.fy = null;
         }
 
-        d3.select('canvas')
+        d3.select('#canvas')
             .append('text')
-            .datum(123)
-            .join('text')
+            .attr("class", 'view_name')
+            .html('Function Graph View')
+            .attr('x', 10)
+            .attr('y', 30)
+
+
+        d3.select('#canvas')
+            .append('text')
+            .attr("class", 'function_label')
+            .text(clusterByKey[this.state.function_name].label)
+            .attr('x', 10)
+            .attr('y', 60)
 
 
     }
@@ -515,6 +549,10 @@ class DOM extends Component {
     click_model_button(value){
 
         let _this = this
+
+        this.setState({
+            function_name: 'cluster_1'
+        })
 
         let model = value.currentTarget.value
 
@@ -631,6 +669,7 @@ class DOM extends Component {
         return (
 
             <div id="root">
+
 
                 <div className='overview-container'>
                     <svg id="canvas_0"></svg>
