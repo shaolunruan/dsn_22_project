@@ -288,7 +288,7 @@ class DOM extends Component {
     drawRv1(cluster_id='cluster_1'){
         let clusterByKey = this.state.clusterByKey
 
-        const width = 900,
+        const width = 600,
             height = 500;
 
         const radius = 6,
@@ -318,7 +318,10 @@ class DOM extends Component {
 
         svg.selectAll("*").remove();
 
-        // this.init_legend(svg)
+        let scale_color_IPAS = d3.scaleLinear()
+            .domain([0,1])
+            .range(["rgb(218,233,254)","rgb(138,180,254)"])
+
 
         let div = d3.select('body')
             .append('div')
@@ -387,11 +390,16 @@ class DOM extends Component {
             .attr('class', 'circle_local')
             .attr("r", 6)
             .attr('fill', function (d) {
-                if(_this.state.model=='Y_branch'){
+                if(_this.state.model=='IPAS'){
+                    // console.log(scale_color_IPAS(_this.state.valueByKey[d.id]))
+                    return scale_color_IPAS(_this.state.valueByKey[d.id]) || "rgb(218,233,254)"
+                }else if(_this.state.model=='Y_branch'){
                     if(_this.state.valueByKey[d.id]==0){
                         return '#bce9bd'
                     }else if(_this.state.valueByKey[d.id]==1){
                         return '#e6b0b4'
+                    }else{
+                        return '#bce9bd'
                     }
                 }else{
                     return d.position == 'head' ? 'rgb(250,195,198)' :
@@ -455,7 +463,7 @@ class DOM extends Component {
             .append('text')
             .attr('class', 'link_text')
             .text(function (d) {
-                if(_this.state.model=='Y_branch'){
+                if(['IPAS','Y_branch'].includes(_this.state.model)){
                     return
                 }else{
                     return d.goldenValue
@@ -561,21 +569,21 @@ class DOM extends Component {
             this.setState({
                 model:model
             },()=>{
-                if(['trident','IPAS'].includes(this.state.model)){
+                if(['IPAS','Y_branch'].includes(this.state.model)){
+                    _this.initTxt_parseDiff_y_branch(this.state.model)
+                }else{
                     _this.initTxt_parseDiff_1(_this.state.model)
                     _this.initJson_parseLayout_1()
-                }else{
-                    _this.initTxt_parseDiff_y_branch()
 
                 }
             })
         }
     }
 
-    initTxt_parseDiff_y_branch(){
+    initTxt_parseDiff_y_branch(model){
         let linkKey, valueByKey = {}, _this = this
 
-        axios.get('data/Y_branch.txt')
+        axios.get(`data/${model}.txt`)
             .then(txt=>{
                 txt = txt.data
 

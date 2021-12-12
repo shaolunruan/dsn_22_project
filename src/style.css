@@ -14,7 +14,7 @@ body{
 
 .svg-container{
     position: absolute;
-    width: 900px;
+    width: 600px;
     height: 500px;
     margin: 15px;
     border-radius: 5px;
@@ -30,7 +30,7 @@ body{
     border-radius: 5px;
     background-color: #fff;
     top: 150px;
-    right: 0;
+    right: 330px;
 }
 
 .btns{
